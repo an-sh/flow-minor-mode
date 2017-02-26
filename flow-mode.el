@@ -4,7 +4,6 @@
 ;; the LICENSE file in the root directory of this source tree.
 
 ;; Version: 0.1
-;; Keywords: flow flowtype javascript
 
 ;; Package-Requires: ((emacs "25.1") (web-mode "14.1"))
 
@@ -34,24 +33,24 @@
   :group 'flow-mode
   :type 'boolean)
 
-(defun column-number-at-pos (position)
+(defun flow-column-at-pos (position)
   "Column number at position.
 POSITION point"
   (save-excursion (goto-char position) (current-column)))
 
-(defun string-of-region ()
+(defun flow-region ()
   "Format region data."
   (if (use-region-p)
       (let ((begin (region-beginning))
             (end (region-end)))
         (format ":%d:%d,%d:%d"
                 (line-number-at-pos begin)
-                (column-number-at-pos begin)
+                (flow-column-at-pos begin)
                 (line-number-at-pos end)
-                (column-number-at-pos end)))
+                (flow-column-at-pos end)))
     ""))
 
-(defmacro with-flow (&rest body)
+(defmacro flow-with-flow (&rest body)
   "With flow.
 BODY progn"
   `(progn
@@ -64,16 +63,16 @@ FILE-SYM symbol
 REGION-SYM symbol
 BODY progn"
   (declare (indent defun))
-  `(with-flow
+  `(flow-with-flow
     (let ((,file-sym (buffer-file-name))
-          (,region-sym (string-of-region)))
+          (,region-sym (flow-region)))
       (switch-to-buffer-other-window "*Shell Command Output*")
       ,@body)))
 
 (defun flow-status ()
   "Initialize flow."
   (interactive)
-  (with-flow
+  (flow-with-flow
    (compile (format "%s status --from emacs; exit 0" flow-binary))
    (switch-to-buffer-other-window "*compilation*")))
 
@@ -98,7 +97,7 @@ BODY progn"
 (defun flow-type-at-pos ()
   "Show type at position."
   (interactive)
-  (with-flow
+  (flow-with-flow
    (let* ((file (buffer-file-name))
           (line (line-number-at-pos))
           (col (current-column))
@@ -114,7 +113,7 @@ BODY progn"
 (defun flow-jump-to-definition ()
   "Jump to definition."
   (interactive)
-  (with-flow
+  (flow-with-flow
    (let* ((file (buffer-file-name))
           (line (line-number-at-pos))
           (col (current-column))
