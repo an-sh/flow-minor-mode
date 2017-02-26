@@ -4,16 +4,19 @@
 ;; the LICENSE file in the root directory of this source tree.
 
 ;; Version: 0.1
+;; URL: https://github.com/an-sh/flow-mode
 
 ;; Package-Requires: ((emacs "25.1") (web-mode "14.1"))
 
 ;;; Commentary:
 
+;; Major mode for flowtype.org, derived from web-mode.  Essentially a
+;; rewrite of an official flow-for-emacs snippet into a standalone
+;; mode with an improved usability.
+
 ;;
 
 ;;; Code:
-
-;;
 
 (require 'web-mode)
 (require 'xref)
