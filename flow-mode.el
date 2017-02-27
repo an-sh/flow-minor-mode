@@ -20,6 +20,7 @@
 
 (require 'web-mode)
 (require 'xref)
+(require 'json)
 
 ;;;###autoload
 (define-derived-mode
