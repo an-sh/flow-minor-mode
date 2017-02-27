@@ -27,6 +27,8 @@
   flow-mode web-mode "Flow"
   "Flow mode")
 
+(defconst flow-buffer "*Flow Output*")
+
 (defcustom flow-binary "flow"
   "Flow executable."
   :group 'flow-mode
@@ -54,64 +56,75 @@ POSITION point"
                 (flow-column-at-pos end)))
     ""))
 
+(defun flow-cmd (&rest args)
+  "Run flow with arguments, outputs to flow buffer.
+ARGS"
+  (apply #'call-process flow-binary nil flow-buffer t args))
+
+(defun flow-cmd-ignore-output (&rest args)
+  "Run flow with arguments, ignore output.
+ARGS"
+  (apply #'call-process flow-binary nil nil nil args))
+
+(defun flow-cmd-to-string (&rest args)
+  "Run flow with arguments, outputs to string.
+ARGS"
+  (with-temp-buffer
+    (apply #'call-process flow-binary nil t nil args)
+    (buffer-string)))
+
 (defmacro flow-with-flow (&rest body)
   "With flow.
 BODY progn"
   `(progn
-     (shell-command-to-string (format "%s start" flow-binary))
+     (flow-cmd-ignore-output "start")
      ,@body))
 
-(defmacro flow-region-command (file-sym region-sym &rest body)
+(defmacro flow-region-command (region-sym &rest body)
   "Flow command on a region.
-FILE-SYM symbol
 REGION-SYM symbol
 BODY progn"
   (declare (indent defun))
   `(flow-with-flow
-    (let ((,file-sym (buffer-file-name))
-          (,region-sym (flow-region)))
-      (switch-to-buffer-other-window "*Shell Command Output*")
+    (let ((,region-sym (concat (buffer-file-name) (flow-region))))
+      (switch-to-buffer-other-window flow-buffer)
+      (setf buffer-read-only nil)
+      (erase-buffer)
       ,@body)))
 
 (defun flow-status ()
   "Initialize flow."
   (interactive)
-  (flow-with-flow
-   (compile (format "%s status --from emacs; exit 0" flow-binary))
-   (switch-to-buffer-other-window "*compilation*")))
+  (flow-region-command region
+    (flow-cmd "status" "--from" "emacs")
+    (compilation-mode)
+    (setf buffer-read-only t)))
 
 (defun flow-suggest ()
   "Fill types."
   (interactive)
-  (flow-region-command file region
-    (shell-command
-     (format "%s suggest %s%s" flow-binary file region))
+  (flow-region-command region
+    (flow-cmd "suggest" region)
     (diff-mode)
-    (read-only-mode)))
+    (setf buffer-read-only t)))
 
 (defun flow-coverage ()
   "Show coverage."
   (interactive)
-  (flow-region-command file region
-    (shell-command
-     (format "%s coverage %s%s" flow-binary file region))
+  (flow-region-command region
+    (message "%s" region)
+    (flow-cmd "coverage" region)
     (compilation-mode)
-    (read-only-mode)))
+    (setf buffer-read-only t)))
 
 (defun flow-type-at-pos ()
   "Show type at position."
   (interactive)
   (flow-with-flow
    (let* ((file (buffer-file-name))
-          (line (line-number-at-pos))
-          (col (current-column))
-          (buffer (current-buffer))
-          (type (shell-command-to-string
-                 (format "%s type-at-pos %s %d %d"
-                         flow-binary
-                         file
-                         line
-                         (1+ col)))))
+          (line (number-to-string (line-number-at-pos)))
+          (col (number-to-string (1+ (current-column))))
+          (type (flow-cmd-to-string "type-at-pos" file line col)))
      (message "%s" (car (split-string type "\n"))))))
 
 (defun flow-jump-to-definition ()
@@ -119,16 +132,10 @@ BODY progn"
   (interactive)
   (flow-with-flow
    (let* ((file (buffer-file-name))
-          (line (line-number-at-pos))
-          (col (current-column))
-          (buffer (current-buffer))
+          (line (number-to-string (line-number-at-pos)))
+          (col (number-to-string (1+ (current-column))))
           (location (json-read-from-string
-                     (shell-command-to-string
-                      (format "%s get-def --json %s %d %d"
-                              flow-binary
-                              file
-                              line
-                              (1+ col)))))
+                     (flow-cmd-to-string "get-def" "--json" file line col)))
           (path (alist-get 'path location))
           (line (alist-get 'line location))
           (offset-in-line (alist-get 'start location)))
@@ -167,8 +174,7 @@ BODY progn"
   '(menu-item "Type suggestions" flow-suggest))
 
 (add-hook 'kill-emacs-hook
-          (lambda ()
-            (shell-command (format "%s stop" flow-binary))))
+          (lambda () (flow-cmd-ignore-output "stop")))
 
 (provide 'flow-mode)
 ;;; flow-mode.el ends here
