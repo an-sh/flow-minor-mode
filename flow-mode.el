@@ -93,7 +93,7 @@ BODY progn"
       ,@body)))
 
 (defun flow-status ()
-  "Initialize flow."
+  "Show errors."
   (interactive)
   (flow-region-command region
     (flow-cmd "status" "--from" "emacs")
