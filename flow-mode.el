@@ -39,6 +39,11 @@
   :group 'flow-mode
   :type 'boolean)
 
+(defcustom flow-stop-server-on-exit t
+  "Stop flow server when Emacs exits."
+  :group 'flow-mode
+  :type 'boolean)
+
 (defun flow-column-at-pos (position)
   "Column number at position.
 POSITION point"
@@ -173,8 +178,11 @@ BODY progn"
 (define-key flow-mode-map [menu-bar flow-mode flow-mode-f]
   '(menu-item "Type suggestions" flow-suggest))
 
-(add-hook 'kill-emacs-hook
-          (lambda () (flow-cmd-ignore-output "stop")))
+(defun flow-stop-flow-server ()
+  "Stop flow hook."
+  (if flow-stop-server-on-exit (flow-cmd-ignore-output "stop")))
+
+(add-hook 'kill-emacs-hook 'flow-stop-flow-server t)
 
 (provide 'flow-mode)
 ;;; flow-mode.el ends here
