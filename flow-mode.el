@@ -34,6 +34,7 @@
 
 (defcustom flow-default-binary "flow"
   "Flow executable to use when no project-specific binary is found."
+  :group 'flow-minor-mode
   :type 'string)
 
 (defcustom flow-jump-other-window nil
