@@ -32,9 +32,8 @@
 
 (defconst flow-buffer "*Flow Output*")
 
-(defcustom flow-binary "flow"
-  "Flow executable."
-  :group 'flow-minor-mode
+(defcustom flow-default-binary "flow"
+  "Flow executable to use when no project-specific binary is found."
   :type 'string)
 
 (defcustom flow-jump-other-window nil
@@ -64,21 +63,32 @@ POSITION point"
                 (flow-column-at-pos end)))
     ""))
 
+(defun flow-binary ()
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                "node_modules"))
+         (flow (and root
+                    (expand-file-name "node_modules/.bin/flow"
+                                      root))))
+    (if (and flow (file-executable-p flow))
+        flow
+      flow-default-binary)))
+
 (defun flow-cmd (&rest args)
   "Run flow with arguments, outputs to flow buffer.
 ARGS"
-  (apply #'call-process flow-binary nil flow-buffer t args))
+  (apply #'call-process (flow-binary) nil flow-buffer t args))
 
 (defun flow-cmd-ignore-output (&rest args)
   "Run flow with arguments, ignore output.
 ARGS"
-  (apply #'call-process flow-binary nil nil nil args))
+  (apply #'call-process (flow-binary) nil nil nil args))
 
 (defun flow-cmd-to-string (&rest args)
   "Run flow with arguments, outputs to string.
 ARGS"
   (with-temp-buffer
-    (apply #'call-process flow-binary nil t nil args)
+    (apply #'call-process (flow-binary) nil t nil args)
     (buffer-string)))
 
 (defmacro flow-with-flow (&rest body)
@@ -183,7 +193,7 @@ BODY progn"
 
 (defun flow-stop-flow-server ()
   "Stop flow hook."
-  (if flow-stop-server-on-exit (flow-cmd-ignore-output "stop")))
+  (if flow-stop-server-on-exit (ignore-errors (flow-cmd-ignore-output "stop"))))
 
 (add-hook 'kill-emacs-hook 'flow-stop-flow-server t)
 
