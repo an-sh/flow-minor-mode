@@ -210,9 +210,15 @@ BODY progn"
     (or (looking-at "//+[ ]*@flow")
         (looking-at "/\\**[ ]*@flow"))))
 
+(defun flow-configured-p ()
+  (locate-dominating-file
+   (or (buffer-file-name) default-directory)
+   ".flowconfig"))
+
 ;;;###autoload
 (defun flow-enable-automatically ()
-  (when (flow-tag-present-p)
+  (when (and (flow-configured-p)
+             (flow-tag-present-p))
     (flow-minor-mode +1)))
 
 (provide 'flow-mode)
