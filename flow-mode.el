@@ -10,38 +10,41 @@
 
 ;;; Commentary:
 
-;; Major mode for flowtype.org, derived from web-mode.  Essentially a
+;; Minor mode for flowtype.org, derived from web-mode.  Essentially a
 ;; rewrite of an official flow-for-emacs snippet into a standalone
 ;; mode with an improved usability.
-
 ;;
-
+;; To enable this mode, enable it in your preferred javascript mode's
+;; hooks:
+;;
+;;   (add-hook 'js2-mode-hook 'flow-enable-automatically)
+;;
+;; This will enable flow-minor-mode for a file only when there is a
+;; "// @flow" declaration at the first line. If you wish to enable
+;; flow-minor-mode for all javascript files, use this instead:
+;;
+;;  (add-hook 'js2-hook 'flow-minor-mode)
+;;
 ;;; Code:
 
-(require 'web-mode)
 (require 'xref)
 (require 'json)
-
-;;;###autoload
-(define-derived-mode
-  flow-mode web-mode "Flow"
-  "Flow mode")
 
 (defconst flow-buffer "*Flow Output*")
 
 (defcustom flow-binary "flow"
   "Flow executable."
-  :group 'flow-mode
+  :group 'flow-minor-mode
   :type 'string)
 
 (defcustom flow-jump-other-window nil
   "Jump to definitions in other window."
-  :group 'flow-mode
+  :group 'flow-minor-mode
   :type 'boolean)
 
 (defcustom flow-stop-server-on-exit t
   "Stop flow server when Emacs exits."
-  :group 'flow-mode
+  :group 'flow-minor-mode
   :type 'boolean)
 
 (defun flow-column-at-pos (position)
@@ -154,7 +157,7 @@ BODY progn"
        (message "Not found")))))
 
 (defvar flow-mode-map (make-sparse-keymap)
-  "Keymap for ‘flow-mode’.")
+  "Keymap for ‘flow-minor-mode’.")
 
 (define-key flow-mode-map (kbd "M-.") 'flow-jump-to-definition)
 
@@ -183,6 +186,23 @@ BODY progn"
   (if flow-stop-server-on-exit (flow-cmd-ignore-output "stop")))
 
 (add-hook 'kill-emacs-hook 'flow-stop-flow-server t)
+
+;;;###autoload
+(define-minor-mode flow-minor-mode
+  "Flow mode"
+  nil " Flow" flow-mode-map)
+
+(defun flow-tag-present-p ()
+  "Return true if the '// @flow' tag is present in the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (or (looking-at "//+[ ]*@flow")
+        (looking-at "/\\**[ ]*@flow"))))
+
+;;;###autoload
+(defun flow-enable-automatically ()
+  (when (flow-tag-present-p)
+    (flow-minor-mode +1)))
 
 (provide 'flow-mode)
 ;;; flow-mode.el ends here
