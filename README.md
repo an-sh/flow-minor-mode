@@ -1,17 +1,28 @@
-# Flow mode
+# flow-minor-mode
 
 Major mode for [flow](http://flowtype.org), derived from
 `web-mode`. Essentially a rewrite of an official
 [flow-for-emacs](https://github.com/flowtype/flow-for-emacs) snippet
 into a standalone mode with an improved usability.
 
-## Additional setup
+## Setup
 
-Auto mode for `.flow.js` files:
+To enable this mode, enable it in your preferred JavaScript mode's
+hooks:
 
+```lisp
+(add-hook 'js2-mode-hook 'flow-enable-automatically)
+````
+
+This will enable `flow-minor-mode` for a file only when there is a
+`//@flow` declaration at the first line. If you wish to enable
+flow-minor-mode for all javascript files, use this instead:
+
+```lisp
+(add-hook 'js2-hook 'flow-minor-mode)
 ```
-(add-to-list 'auto-mode-alist '("\\.flow.js\\'" . flow-mode))
-```
+
+## Additional integrations
 
 ### flycheck-flow
 
