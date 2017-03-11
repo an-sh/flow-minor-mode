@@ -1,9 +1,9 @@
 # flow-minor-mode
 
-Major mode for [flow](http://flowtype.org), derived from
-`web-mode`. Essentially a rewrite of an official
-[flow-for-emacs](https://github.com/flowtype/flow-for-emacs) snippet
-into a standalone mode with an improved usability.
+Minor mode for [flow](http://flowtype.org), which can be overlayed on
+top of other modes like `web-mode`. Essentially a rewrite of an
+official [flow-for-emacs](https://github.com/flowtype/flow-for-emacs)
+snippet into a standalone mode with an improved usability.
 
 ## Setup
 
