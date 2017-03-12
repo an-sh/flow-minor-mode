@@ -20,8 +20,9 @@
 ;;   (add-hook 'js2-mode-hook 'flow-enable-automatically)
 ;;
 ;; This will enable flow-minor-mode for a file only when there is a
-;; "// @flow" declaration at the first line. If you wish to enable
-;; flow-minor-mode for all javascript files, use this instead:
+;; "// @flow" declaration at the first line and a `.flowconfig` file
+;; is present in the project. If you wish to enable flow-minor-mode
+;; for all javascript files, use this instead:
 ;;
 ;;  (add-hook 'js2-hook 'flow-minor-mode)
 ;;
@@ -210,9 +211,15 @@ BODY progn"
     (or (looking-at "//+[ ]*@flow")
         (looking-at "/\\**[ ]*@flow"))))
 
+(defun flow-configured-p ()
+  (locate-dominating-file
+   (or (buffer-file-name) default-directory)
+   ".flowconfig"))
+
 ;;;###autoload
 (defun flow-enable-automatically ()
-  (when (flow-tag-present-p)
+  (when (and (flow-configured-p)
+             (flow-tag-present-p))
     (flow-minor-mode +1)))
 
 (provide 'flow-mode)

@@ -15,8 +15,9 @@ hooks:
 ````
 
 This will enable `flow-minor-mode` for a file only when there is a
-`//@flow` declaration at the first line. If you wish to enable
-flow-minor-mode for all javascript files, use this instead:
+`//@flow` declaration at the first line and a `.flowconfig` file is
+present in the project. If you wish to enable flow-minor-mode for all
+javascript files, use this instead:
 
 ```lisp
 (add-hook 'js2-hook 'flow-minor-mode)
