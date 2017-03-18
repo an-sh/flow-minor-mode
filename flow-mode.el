@@ -3,7 +3,7 @@
 ;; This source code is licensed under the BSD-style license found in
 ;; the LICENSE file in the root directory of this source tree.
 
-;; Version: 0.1
+;; Version: 0.2
 ;; URL: https://github.com/an-sh/flow-mode
 
 ;; Package-Requires: ((emacs "25.1") (web-mode "14.1"))
