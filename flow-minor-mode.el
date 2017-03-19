@@ -173,6 +173,7 @@ BODY progn"
   "Keymap for ‘flow-minor-mode’.")
 
 (define-key flow-minor-mode-map (kbd "M-.") 'flow-jump-to-definition)
+(define-key flow-minor-mode-map (kbd "M-,") 'xref-pop-marker-stack)
 
 (define-key flow-minor-mode-map (kbd "C-c C-c s") 'flow-status)
 (define-key flow-minor-mode-map (kbd "C-c C-c c") 'flow-coverage)
