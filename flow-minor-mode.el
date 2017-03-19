@@ -1,10 +1,10 @@
-;;; flow-mode.el --- Flow type mode based on web-mode. -*- lexical-binding: t -*-
+;;; flow-minor-mode.el --- Flow type mode based on web-mode. -*- lexical-binding: t -*-
 
 ;; This source code is licensed under the BSD-style license found in
 ;; the LICENSE file in the root directory of this source tree.
 
 ;; Version: 0.2
-;; URL: https://github.com/an-sh/flow-mode
+;; URL: https://github.com/an-sh/flow-minor-mode
 
 ;; Package-Requires: ((emacs "25.1") (web-mode "14.1"))
 
@@ -66,6 +66,7 @@ POSITION point"
     ""))
 
 (defun flow-binary ()
+  "Search for a local or global flow binary."
   (let* ((root (locate-dominating-file
                 (or (buffer-file-name) default-directory)
                 "node_modules"))
@@ -168,29 +169,29 @@ BODY progn"
              (forward-char (1- offset-in-line))))
        (message "Not found")))))
 
-(defvar flow-mode-map (make-sparse-keymap)
+(defvar flow-minor-mode-map (make-sparse-keymap)
   "Keymap for ‘flow-minor-mode’.")
 
-(define-key flow-mode-map (kbd "M-.") 'flow-jump-to-definition)
+(define-key flow-minor-mode-map (kbd "M-.") 'flow-jump-to-definition)
 
-(define-key flow-mode-map (kbd "C-c C-c s") 'flow-status)
-(define-key flow-mode-map (kbd "C-c C-c c") 'flow-coverage)
-(define-key flow-mode-map (kbd "C-c C-c t") 'flow-type-at-pos)
-(define-key flow-mode-map (kbd "C-c C-c f") 'flow-suggest)
+(define-key flow-minor-mode-map (kbd "C-c C-c s") 'flow-status)
+(define-key flow-minor-mode-map (kbd "C-c C-c c") 'flow-coverage)
+(define-key flow-minor-mode-map (kbd "C-c C-c t") 'flow-type-at-pos)
+(define-key flow-minor-mode-map (kbd "C-c C-c f") 'flow-suggest)
 
-(define-key flow-mode-map [menu-bar flow-mode]
-  (cons "Flow" flow-mode-map))
+(define-key flow-minor-mode-map [menu-bar flow-minor-mode]
+  (cons "Flow" flow-minor-mode-map))
 
-(define-key flow-mode-map [menu-bar flow-mode flow-mode-s]
+(define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-s]
   '(menu-item "Flow status" flow-status))
 
-(define-key flow-mode-map [menu-bar flow-mode flow-mode-c]
+(define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-c]
   '(menu-item "Flow coverage" flow-coverage))
 
-(define-key flow-mode-map [menu-bar flow-mode flow-mode-t]
+(define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-t]
   '(menu-item "Type at point" flow-type-at-pos))
 
-(define-key flow-mode-map [menu-bar flow-mode flow-mode-f]
+(define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-f]
   '(menu-item "Type suggestions" flow-suggest))
 
 (defun flow-stop-flow-server ()
@@ -202,7 +203,7 @@ BODY progn"
 ;;;###autoload
 (define-minor-mode flow-minor-mode
   "Flow mode"
-  nil " Flow" flow-mode-map)
+  nil " Flow" flow-minor-mode-map)
 
 (defun flow-tag-present-p ()
   "Return true if the '// @flow' tag is present in the current buffer."
@@ -212,15 +213,17 @@ BODY progn"
         (looking-at "/\\**[ ]*@flow"))))
 
 (defun flow-configured-p ()
+  "Predicate to check configuration."
   (locate-dominating-file
    (or (buffer-file-name) default-directory)
    ".flowconfig"))
 
 ;;;###autoload
 (defun flow-enable-automatically ()
+  "Search for a flow marker and enable flow-minor-mode."
   (when (and (flow-configured-p)
              (flow-tag-present-p))
     (flow-minor-mode +1)))
 
-(provide 'flow-mode)
-;;; flow-mode.el ends here
+(provide 'flow-minor-mode)
+;;; flow-minor-mode.el ends here
