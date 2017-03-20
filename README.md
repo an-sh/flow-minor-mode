@@ -11,7 +11,7 @@ To enable this mode, enable it in your preferred JavaScript mode's
 hooks:
 
 ```lisp
-(add-hook 'js2-mode-hook 'flow-enable-automatically)
+(add-hook 'js2-mode-hook 'flow-minor-enable-automatically)
 ````
 
 This will enable `flow-minor-mode` for a file only when there is a
@@ -29,8 +29,8 @@ javascript files, use this instead:
 
 ```lisp
 (with-eval-after-load 'flycheck
-  (flycheck-add-mode 'javascript-flow 'flow-mode)
-  (flycheck-add-mode 'javascript-eslint 'flow-mode)
+  (flycheck-add-mode 'javascript-flow 'flow-minor-mode)
+  (flycheck-add-mode 'javascript-eslint 'flow-minor-mode)
   (flycheck-add-next-checker 'javascript-flow 'javascript-eslint))
 ```
 
