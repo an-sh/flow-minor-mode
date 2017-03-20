@@ -17,7 +17,7 @@
 ;; To enable this mode, enable it in your preferred javascript mode's
 ;; hooks:
 ;;
-;;   (add-hook 'js2-mode-hook 'flow-enable-automatically)
+;;   (add-hook 'js2-mode-hook 'flow-minor-enable-automatically)
 ;;
 ;; This will enable flow-minor-mode for a file only when there is a
 ;; "// @flow" declaration at the first line and a `.flowconfig` file
@@ -31,41 +31,41 @@
 (require 'xref)
 (require 'json)
 
-(defconst flow-buffer "*Flow Output*")
+(defconst flow-minor-buffer "*Flow Output*")
 
-(defcustom flow-default-binary "flow"
+(defcustom flow-minor-default-binary "flow"
   "Flow executable to use when no project-specific binary is found."
   :group 'flow-minor-mode
   :type 'string)
 
-(defcustom flow-jump-other-window nil
+(defcustom flow-minor-jump-other-window nil
   "Jump to definitions in other window."
   :group 'flow-minor-mode
   :type 'boolean)
 
-(defcustom flow-stop-server-on-exit t
+(defcustom flow-minor-stop-server-on-exit t
   "Stop flow server when Emacs exits."
   :group 'flow-minor-mode
   :type 'boolean)
 
-(defun flow-column-at-pos (position)
+(defun flow-minor-column-at-pos (position)
   "Column number at position.
 POSITION point"
   (save-excursion (goto-char position) (current-column)))
 
-(defun flow-region ()
+(defun flow-minor-region ()
   "Format region data."
   (if (use-region-p)
       (let ((begin (region-beginning))
             (end (region-end)))
         (format ":%d:%d,%d:%d"
                 (line-number-at-pos begin)
-                (flow-column-at-pos begin)
+                (flow-minor-column-at-pos begin)
                 (line-number-at-pos end)
-                (flow-column-at-pos end)))
+                (flow-minor-column-at-pos end)))
     ""))
 
-(defun flow-binary ()
+(defun flow-minor-binary ()
   "Search for a local or global flow binary."
   (let* ((root (locate-dominating-file
                 (or (buffer-file-name) default-directory)
@@ -75,95 +75,95 @@ POSITION point"
                                       root))))
     (if (and flow (file-executable-p flow))
         flow
-      flow-default-binary)))
+      flow-minor-default-binary)))
 
-(defun flow-cmd (&rest args)
+(defun flow-minor-cmd (&rest args)
   "Run flow with arguments, outputs to flow buffer.
 ARGS"
-  (apply #'call-process (flow-binary) nil flow-buffer t args))
+  (apply #'call-process (flow-minor-binary) nil flow-minor-buffer t args))
 
-(defun flow-cmd-ignore-output (&rest args)
+(defun flow-minor-cmd-ignore-output (&rest args)
   "Run flow with arguments, ignore output.
 ARGS"
-  (apply #'call-process (flow-binary) nil nil nil args))
+  (apply #'call-process (flow-minor-binary) nil nil nil args))
 
-(defun flow-cmd-to-string (&rest args)
+(defun flow-minor-cmd-to-string (&rest args)
   "Run flow with arguments, outputs to string.
 ARGS"
   (with-temp-buffer
-    (apply #'call-process (flow-binary) nil t nil args)
+    (apply #'call-process (flow-minor-binary) nil t nil args)
     (buffer-string)))
 
-(defmacro flow-with-flow (&rest body)
+(defmacro flow-minor-with-flow (&rest body)
   "With flow.
 BODY progn"
   `(progn
-     (flow-cmd-ignore-output "start")
+     (flow-minor-cmd-ignore-output "start")
      ,@body))
 
-(defmacro flow-region-command (region-sym &rest body)
+(defmacro flow-minor-region-command (region-sym &rest body)
   "Flow command on a region.
 REGION-SYM symbol
 BODY progn"
   (declare (indent defun))
-  `(flow-with-flow
-    (let ((,region-sym (concat (buffer-file-name) (flow-region))))
-      (switch-to-buffer-other-window flow-buffer)
+  `(flow-minor-with-flow
+    (let ((,region-sym (concat (buffer-file-name) (flow-minor-region))))
+      (switch-to-buffer-other-window flow-minor-buffer)
       (setf buffer-read-only nil)
       (erase-buffer)
       ,@body)))
 
-(defun flow-status ()
+(defun flow-minor-status ()
   "Show errors."
   (interactive)
-  (flow-region-command region
-    (flow-cmd "status" "--from" "emacs")
+  (flow-minor-region-command region
+    (flow-minor-cmd "status" "--from" "emacs")
     (compilation-mode)
     (setf buffer-read-only t)))
 
-(defun flow-suggest ()
+(defun flow-minor-suggest ()
   "Fill types."
   (interactive)
-  (flow-region-command region
-    (flow-cmd "suggest" region)
+  (flow-minor-region-command region
+    (flow-minor-cmd "suggest" region)
     (diff-mode)
     (setf buffer-read-only t)))
 
-(defun flow-coverage ()
+(defun flow-minor-coverage ()
   "Show coverage."
   (interactive)
-  (flow-region-command region
+  (flow-minor-region-command region
     (message "%s" region)
-    (flow-cmd "coverage" region)
+    (flow-minor-cmd "coverage" region)
     (compilation-mode)
     (setf buffer-read-only t)))
 
-(defun flow-type-at-pos ()
+(defun flow-minor-type-at-pos ()
   "Show type at position."
   (interactive)
-  (flow-with-flow
+  (flow-minor-with-flow
    (let* ((file (buffer-file-name))
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
-          (type (flow-cmd-to-string "type-at-pos" file line col)))
+          (type (flow-minor-cmd-to-string "type-at-pos" file line col)))
      (message "%s" (car (split-string type "\n"))))))
 
-(defun flow-jump-to-definition ()
+(defun flow-minor-jump-to-definition ()
   "Jump to definition."
   (interactive)
-  (flow-with-flow
+  (flow-minor-with-flow
    (let* ((file (buffer-file-name))
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
           (location (json-read-from-string
-                     (flow-cmd-to-string "get-def" "--json" file line col)))
+                     (flow-minor-cmd-to-string "get-def" "--json" file line col)))
           (path (alist-get 'path location))
           (line (alist-get 'line location))
           (offset-in-line (alist-get 'start location)))
      (if (> (length path) 0)
          (progn
            (xref-push-marker-stack)
-           (funcall (if flow-jump-other-window #'find-file-other-window #'find-file) path)
+           (funcall (if flow-minor-jump-other-window #'find-file-other-window #'find-file) path)
            (goto-line line)
            (when (> offset-in-line 0)
              (forward-char (1- offset-in-line))))
@@ -172,58 +172,58 @@ BODY progn"
 (defvar flow-minor-mode-map (make-sparse-keymap)
   "Keymap for ‘flow-minor-mode’.")
 
-(define-key flow-minor-mode-map (kbd "M-.") 'flow-jump-to-definition)
+(define-key flow-minor-mode-map (kbd "M-.") 'flow-minor-jump-to-definition)
 (define-key flow-minor-mode-map (kbd "M-,") 'xref-pop-marker-stack)
 
-(define-key flow-minor-mode-map (kbd "C-c C-c s") 'flow-status)
-(define-key flow-minor-mode-map (kbd "C-c C-c c") 'flow-coverage)
-(define-key flow-minor-mode-map (kbd "C-c C-c t") 'flow-type-at-pos)
-(define-key flow-minor-mode-map (kbd "C-c C-c f") 'flow-suggest)
+(define-key flow-minor-mode-map (kbd "C-c C-c s") 'flow-minor-status)
+(define-key flow-minor-mode-map (kbd "C-c C-c c") 'flow-minor-coverage)
+(define-key flow-minor-mode-map (kbd "C-c C-c t") 'flow-minor-type-at-pos)
+(define-key flow-minor-mode-map (kbd "C-c C-c f") 'flow-minor-suggest)
 
 (define-key flow-minor-mode-map [menu-bar flow-minor-mode]
   (cons "Flow" flow-minor-mode-map))
 
 (define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-s]
-  '(menu-item "Flow status" flow-status))
+  '(menu-item "Flow status" flow-minor-status))
 
 (define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-c]
-  '(menu-item "Flow coverage" flow-coverage))
+  '(menu-item "Flow coverage" flow-minor-coverage))
 
 (define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-t]
-  '(menu-item "Type at point" flow-type-at-pos))
+  '(menu-item "Type at point" flow-minor-type-at-pos))
 
 (define-key flow-minor-mode-map [menu-bar flow-minor-mode flow-minor-mode-f]
-  '(menu-item "Type suggestions" flow-suggest))
+  '(menu-item "Type suggestions" flow-minor-suggest))
 
-(defun flow-stop-flow-server ()
+(defun flow-minor-stop-flow-server ()
   "Stop flow hook."
-  (if flow-stop-server-on-exit (ignore-errors (flow-cmd-ignore-output "stop"))))
+  (if flow-minor-stop-server-on-exit (ignore-errors (flow-minor-cmd-ignore-output "stop"))))
 
-(add-hook 'kill-emacs-hook 'flow-stop-flow-server t)
+(add-hook 'kill-emacs-hook 'flow-minor-stop-flow-server t)
 
 ;;;###autoload
 (define-minor-mode flow-minor-mode
   "Flow mode"
   nil " Flow" flow-minor-mode-map)
 
-(defun flow-tag-present-p ()
+(defun flow-minor-tag-present-p ()
   "Return true if the '// @flow' tag is present in the current buffer."
   (save-excursion
     (goto-char (point-min))
     (or (looking-at "//+[ ]*@flow")
         (looking-at "/\\**[ ]*@flow"))))
 
-(defun flow-configured-p ()
+(defun flow-minor-configured-p ()
   "Predicate to check configuration."
   (locate-dominating-file
    (or (buffer-file-name) default-directory)
    ".flowconfig"))
 
 ;;;###autoload
-(defun flow-enable-automatically ()
+(defun flow-minor-enable-automatically ()
   "Search for a flow marker and enable flow-minor-mode."
-  (when (and (flow-configured-p)
-             (flow-tag-present-p))
+  (when (and (flow-minor-configured-p)
+             (flow-minor-tag-present-p))
     (flow-minor-mode +1)))
 
 (provide 'flow-minor-mode)
