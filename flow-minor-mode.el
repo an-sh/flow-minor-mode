@@ -24,7 +24,7 @@
 ;; is present in the project.  If you wish to enable flow-minor-mode
 ;; for all javascript files, use this instead:
 ;;
-;;  (add-hook 'js2-hook 'flow-minor-mode)
+;;  (add-hook 'js2-mode-hook 'flow-minor-mode)
 ;;
 ;;; Code:
 
