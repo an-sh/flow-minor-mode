@@ -210,8 +210,23 @@ BODY progn"
   "Return true if the '// @flow' tag is present in the current buffer."
   (save-excursion
     (goto-char (point-min))
-    (or (looking-at "//+[ ]*@flow")
-        (looking-at "/\\**[ ]*@flow"))))
+    (let (stop found)
+      (while (not stop)
+        (when (not (re-search-forward "[^\n[:space:]]" nil t))
+          (setq stop t))
+        (backward-char)
+
+        (cond ((or (looking-at "//+[ ]*@flow")
+                   (looking-at "/\\**[ ]*@flow"))
+               (setq found t)
+               (setq stop t))
+              ((looking-at "//")
+               (forward-line))
+              ((looking-at "/\\*")
+               (when (not (re-search-forward "*/" nil t))
+                 (setq stop t)))
+              (t (setq stop t))))
+      found)))
 
 (defun flow-minor-configured-p ()
   "Predicate to check configuration."
