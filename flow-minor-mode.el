@@ -201,10 +201,55 @@ BODY progn"
 
 (add-hook 'kill-emacs-hook 'flow-minor-stop-flow-server t)
 
+(defun flow-minor-eldoc-filter (proc string))
+
+(defun flow-minor-maybe-delete-process (name)
+  (when-let (process (get-process name))
+    (delete-process name)))
+
+(defun flow-minor-eldoc-sentinel (process _event)
+  (when (and (eq (process-status process) 'exit)
+             (eq (process-exit-status process) 0))
+    (with-current-buffer "*Flow Eldoc*"
+      (goto-char (point-min))
+      (forward-line 1)
+      (delete-region (point) (point-max))
+      (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n"))))))
+
+(defun flow-minor-eldoc-documentation-function ()
+  "Display type at point with eldoc."
+  (flow-minor-maybe-delete-process "flow-minor-eldoc")
+
+  (let* ((line (line-number-at-pos (point)))
+         (col (+ 1 (current-column)))
+         (buffer (get-buffer-create "*Flow Eldoc*"))
+         (command (list (flow-minor-binary)
+                        "type-at-pos"
+                        "--path" buffer-file-name
+                        (number-to-string line)
+                        (number-to-string col)))
+         (process (make-process :name "flow-minor-eldoc"
+                                :buffer buffer
+                                :command command
+                                :connection-type 'pipe
+                                :sentinel 'flow-minor-eldoc-sentinel)))
+    (with-current-buffer buffer
+      (erase-buffer))
+    (save-restriction
+      (widen)
+      (process-send-region process (point-min) (point-max)))
+    (process-send-string process "\n")
+    (process-send-eof process))
+  nil)
+
 ;;;###autoload
 (define-minor-mode flow-minor-mode
   "Flow mode"
-  nil " Flow" flow-minor-mode-map)
+  nil " Flow" flow-minor-mode-map
+  (if flow-minor-mode
+      (progn
+        (setq-local eldoc-documentation-function 'flow-minor-eldoc-documentation-function)
+        (eldoc-mode))))
 
 (defun flow-minor-tag-present-p ()
   "Return true if the '// @flow' tag is present in the current buffer."
