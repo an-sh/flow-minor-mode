@@ -138,6 +138,23 @@ BODY progn"
     (compilation-mode)
     (setf buffer-read-only t)))
 
+(defvar flow-type-font-lock-highlight
+  '(
+    ("\\([-_[:alnum:]]+\\)\\??:" . font-lock-variable-name-face)
+    ("\\_<\\(true\\|false\\|null\\|undefined\\|void\\)\\_>" . font-lock-constant-face)
+    ("<\\([-_[:alnum:]]+\\)>" . font-lock-type-face)
+    ))
+
+(defun flow-minor-colorize-buffer ()
+  (setq font-lock-defaults '(flow-type-font-lock-highlight))
+  (font-lock-fontify-buffer))
+
+(defun flow-minor-colorize-type (text)
+  (with-temp-buffer
+    (insert text)
+    (flow-minor-colorize-buffer)
+    (buffer-string)))
+
 (defun flow-minor-type-at-pos ()
   "Show type at position."
   (interactive)
@@ -146,7 +163,7 @@ BODY progn"
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
           (type (flow-minor-cmd-to-string "type-at-pos" file line col)))
-     (message "%s" (car (split-string type "\n"))))))
+     (message "%s" (flow-minor-colorize-type (car (split-string type "\n")))))))
 
 (defun flow-minor-jump-to-definition ()
   "Jump to definition."
@@ -214,6 +231,7 @@ BODY progn"
       (goto-char (point-min))
       (forward-line 1)
       (delete-region (point) (point-max))
+      (flow-minor-colorize-buffer)
       (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n"))))))
 
 (defun flow-minor-eldoc-documentation-function ()
