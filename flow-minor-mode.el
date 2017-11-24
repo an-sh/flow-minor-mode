@@ -259,8 +259,9 @@ BODY progn"
       (while (not stop)
         (when (not (re-search-forward "[^\n[:space:]]" nil t))
           (setq stop t))
-        (backward-char)
-
+        (if (equal (point) (point-min))
+            (setq stop t)
+          (backward-char))
         (cond ((or (looking-at "//+[ ]*@flow")
                    (looking-at "/\\**[ ]*@flow"))
                (setq found t)
