@@ -25,6 +25,11 @@ javascript files, use this instead:
 
 ## Additional integrations
 
+### flow-js2-mode (WIP)
+
+[flow-js2-mode](https://github.com/Fuco1/flow-js2-mode) is a major
+mode for flow files.
+
 ### flycheck-flow
 
 ```lisp
