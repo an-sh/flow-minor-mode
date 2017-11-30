@@ -30,6 +30,7 @@
 
 (require 'xref)
 (require 'json)
+(require 'compile)
 
 (defconst flow-minor-buffer "*Flow Output*")
 
@@ -304,6 +305,16 @@ BODY progn"
   (when (and (flow-minor-configured-p)
              (flow-minor-tag-present-p))
     (flow-minor-mode +1)))
+
+(defun flow-status ()
+  "Invoke flow to check types"
+  (interactive)
+  (let ((cmd "flow status")
+        (regexp '(flow "^\\(Error:\\)[ \t]+\\(\\(.+\\):\\([[:digit:]]+\\)\\)"
+                       3 4 nil (1) 2 (1 compilation-error-face))))
+    (add-to-list 'compilation-error-regexp-alist 'flow)
+    (add-to-list 'compilation-error-regexp-alist-alist regexp)
+    (compile cmd)))
 
 (provide 'flow-minor-mode)
 ;;; flow-minor-mode.el ends here
