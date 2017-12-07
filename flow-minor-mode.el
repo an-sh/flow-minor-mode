@@ -219,21 +219,20 @@ BODY progn"
 
 (add-hook 'kill-emacs-hook 'flow-minor-stop-flow-server t)
 
-(defun flow-minor-eldoc-filter (proc string))
-
 (defun flow-minor-maybe-delete-process (name)
   (when-let (process (get-process name))
     (delete-process name)))
 
 (defun flow-minor-eldoc-sentinel (process _event)
-  (when (and (eq (process-status process) 'exit)
-             (eq (process-exit-status process) 0))
-    (with-current-buffer "*Flow Eldoc*"
-      (goto-char (point-min))
-      (forward-line 1)
-      (delete-region (point) (point-max))
-      (flow-minor-colorize-buffer)
-      (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n"))))))
+  (when (eq (process-status process) 'exit)
+    (if (eq (process-exit-status process) 0)
+        (with-current-buffer "*Flow Eldoc*"
+          (goto-char (point-min))
+          (forward-line 1)
+          (delete-region (point) (point-max))
+          (flow-minor-colorize-buffer)
+          (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n"))))
+      (switch-to-buffer-other-window (get-buffer "*Flow Eldoc Error*") t))))
 
 (defun flow-minor-eldoc-documentation-function ()
   "Display type at point with eldoc."
@@ -242,6 +241,7 @@ BODY progn"
   (let* ((line (line-number-at-pos (point)))
          (col (+ 1 (current-column)))
          (buffer (get-buffer-create "*Flow Eldoc*"))
+         (errorbuffer (get-buffer-create "*Flow Eldoc Error*"))
          (command (list (flow-minor-binary)
                         "type-at-pos"
                         "--path" buffer-file-name
@@ -251,8 +251,11 @@ BODY progn"
                                 :buffer buffer
                                 :command command
                                 :connection-type 'pipe
-                                :sentinel 'flow-minor-eldoc-sentinel)))
+                                :sentinel 'flow-minor-eldoc-sentinel
+                                :stderr errorbuffer)))
     (with-current-buffer buffer
+      (erase-buffer))
+    (with-current-buffer errorbuffer
       (erase-buffer))
     (save-restriction
       (widen)
