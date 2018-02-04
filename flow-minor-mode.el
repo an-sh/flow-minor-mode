@@ -231,8 +231,7 @@ BODY progn"
           (forward-line 1)
           (delete-region (point) (point-max))
           (flow-minor-colorize-buffer)
-          (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n"))))
-      (switch-to-buffer-other-window (get-buffer "*Flow Eldoc Error*") t))))
+          (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n")))))))
 
 (defun flow-minor-eldoc-documentation-function ()
   "Display type at point with eldoc."
