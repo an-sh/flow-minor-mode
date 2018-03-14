@@ -220,7 +220,7 @@ BODY progn"
 (add-hook 'kill-emacs-hook 'flow-minor-stop-flow-server t)
 
 (defun flow-minor-maybe-delete-process (name)
-  (when-let (process (get-process name))
+  (when (get-process name)
     (delete-process name)))
 
 (defun flow-minor-eldoc-sentinel (process _event)
