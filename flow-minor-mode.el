@@ -163,7 +163,7 @@ BODY progn"
    (let* ((file (buffer-file-name))
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
-          (type (flow-minor-cmd-to-string "type-at-pos" file line col)))
+          (type (flow-minor-cmd-to-string "type-at-pos" "--quiet" file line col)))
      (message "%s" (flow-minor-colorize-type (car (split-string type "\n")))))))
 
 (defun flow-minor-jump-to-definition ()
@@ -174,7 +174,7 @@ BODY progn"
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
           (location (json-read-from-string
-                     (flow-minor-cmd-to-string "get-def" "--json" file line col)))
+                     (flow-minor-cmd-to-string "get-def" "--json" "--quiet" file line col)))
           (path (alist-get 'path location))
           (line (alist-get 'line location))
           (offset-in-line (alist-get 'start location)))
@@ -244,6 +244,7 @@ BODY progn"
          (command (list (flow-minor-binary)
                         "type-at-pos"
                         "--path" buffer-file-name
+                        "--quiet"
                         (number-to-string line)
                         (number-to-string col)))
          (process (make-process :name "flow-minor-eldoc"
