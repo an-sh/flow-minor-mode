@@ -156,6 +156,8 @@ BODY progn"
     (flow-minor-colorize-buffer)
     (buffer-string)))
 
+(defvar flow-minor-pos-regexp "\n\\(.*:[0-9]+:[0-9]+.*\n\\)?\\'")
+
 (defun flow-minor-type-at-pos ()
   "Show type at position."
   (interactive)
@@ -164,7 +166,8 @@ BODY progn"
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
           (type (flow-minor-cmd-to-string "type-at-pos" "--quiet" file line col)))
-     (message "%s" (flow-minor-colorize-type (car (split-string type "\n")))))))
+     (message "%s" (flow-minor-colorize-type
+                    (replace-regexp-in-string flow-minor-pos-regexp "" type))))))
 
 (defun flow-minor-jump-to-definition ()
   "Jump to definition."
@@ -228,10 +231,11 @@ BODY progn"
     (if (eq (process-exit-status process) 0)
         (with-current-buffer "*Flow Eldoc*"
           (goto-char (point-min))
-          (forward-line 1)
-          (delete-region (point) (point-max))
+          (save-match-data
+            (if (re-search-forward flow-minor-pos-regexp nil t)
+                (replace-match "")))
           (flow-minor-colorize-buffer)
-          (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n")))))))
+          (eldoc-message (buffer-string))))))
 
 (defun flow-minor-eldoc-documentation-function ()
   "Display type at point with eldoc."
